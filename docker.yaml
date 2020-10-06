@@ -1,0 +1,38 @@
+- hosts: dockerhost
+  gather_facts: false
+  tasks:
+     - name: config yum for docker
+       yum_repository:
+          name: docker-repo
+          baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+          description: my docker repo
+          gpgcheck: false
+     - name: install docker
+       command: "yum install docker-ce --nobest"
+     - name: Starting docker services
+       service:
+          name: docker
+          state: started
+          enabled: yes
+     - name: installing docker-py
+       pip:
+          name: docker-py
+     - name: installling http server
+       docker_image:
+          name: httpd
+          source: pull
+
+     - name: Copying the html file
+       copy: 
+          src: index.html
+          dest: /var/www/html/
+
+     - name: running docker container
+       docker_container:
+          name: webserver
+          state: started
+          exposed_ports: "80"
+          image: httpd
+          ports: 8080:80
+          volumes: /var/www/html/:/usr/local/apache2/htdocs
+          command: httpd -D FOREGROUND
